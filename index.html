@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KöpGuiden</title>
+
+    <meta property="og:title" content="KöpGuiden - 買い物支援ツール" />
+    <meta property="og:description" content="KöpGuidenは、単価比較、予算管理、買い物進行度を可視化するスマートな買い物支援ツールです。" />
+    <meta property="og:url" content="https://sk0528jp.github.io/kg" />
+    <meta property="og:image" content="XXXXXXXXXX" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="KöpGuiden" />
+    <meta property="og:locale" content="ja_JP" />
+
+    <link rel="preload" href="https://sk0528jp.github.io/font/MiSans-Normal.woff2" as="font" type="font/woff2" crossorigin>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* MiSans-Normal フォントの定義 */
+        @font-face {
+            font-family: 'MiSans';
+            src: url('https://sk0528jp.github.io/font/MiSans-Normal.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        :root {
+            /* Light Theme: Nordic Serenity */
+            --primary-color: #6A8EAE; /* Soft Blue-Gray */
+            --primary-dark: #5A7E9E;
+            --primary-light: #C3D2E3;
+            --text-color: #4A4A4A; /* Charcoal */
+            --bg-color: #F7F7F7; /* Light Gray */
+            --card-bg: #FFFFFF;
+            --border-color: #E2E2E2;
+            --accent-color: #EFBB59; /* Muted Gold */
+            --remove-color: #D66D5B; /* Terracotta Red */
+            --remove-hover: #C35B4A;
+            --shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+            --completed-color: #AAAAAA;
+        }
+
+        /* Dark Mode: Nordic Night */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary-color: #A4C2D8;
+                --primary-dark: #8BAAC2;
+                --primary-light: #3A4E5C;
+                --text-color: #EAEAEA;
+                --bg-color: #2D3942;
+                --card-bg: #3C4B56;
+                --border-color: #55646E;
+                --accent-color: #E2C084;
+                --remove-color: #E09181;
+                --remove-hover: #D66D5B;
+                --shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+                --completed-color: #777777;
+            }
+        }
+
+        body {
+            font-family: 'MiSans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            line-height: 1.8;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            max-width: 700px;
+            width: 100%;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title i {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
+        /* Manual styles */
+        .manual-accordion {
+            margin-bottom: 20px;
+        }
+        .manual-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .manual-header:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .manual-header.active i {
+            transform: rotate(180deg);
+        }
+        .manual-content {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            background-color: var(--card-bg);
+            display: none;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-color);
+        }
+
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+        
+        input[type="number"]:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .input-row {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+        
+        .input-row .input-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .form-section {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: var(--bg-color);
+            border-radius: 12px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            margin-top: 10px;
+        }
+
+        button.small {
+            width: auto;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        button:active {
+            transform: scale(0.99);
+        }
+        
+        .result-box {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+        
+        .result-box.win {
+            background-color: var(--accent-color);
+            color: var(--text-color);
+        }
+
+        #shopping-list {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--card-bg);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: background-color 0.3s;
+            border: 1px solid var(--border-color);
+        }
+
+        .list-item:hover {
+            background-color: var(--bg-color);
+        }
+        
+        .item-details {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            transition: opacity 0.3s;
+        }
+        
+        .item-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .item-price {
+            font-size: 0.9rem;
+            color: var(--primary-color);
+        }
+        
+        .list-item.completed {
+            background-color: var(--bg-color);
+        }
+        .list-item.completed .item-details {
+            text-decoration: line-through;
+            color: var(--completed-color);
+            opacity: 0.7;
+        }
+        
+        .item-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .remove-button, .complete-button {
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        .remove-button {
+            background-color: var(--remove-color);
+            color: white;
+        }
+
+        .remove-button:hover {
+            background-color: var(--remove-hover);
+        }
+
+        .complete-button {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .complete-button:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .total-box {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-top: 25px;
+        }
+
+        .progress-section {
+            margin-top: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .progress-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-label {
+            width: 100px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        
+        .progress-container {
+            flex-grow: 1;
+            height: 30px;
+            background-color: var(--border-color);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary-color);
+            transition: width 0.4s ease-in-out;
+            text-align: right;
+            line-height: 30px;
+            color: white;
+            font-weight: bold;
+            padding-right: 10px;
+            box-sizing: border-box;
+            min-width: 0;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-color);
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+        }
+
+        .budget-over .progress-bar {
+            background-color: var(--remove-color);
+        }
+
+        .tax-rate-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .tax-rate-row label {
+            margin-bottom: 0;
+            width: 80px;
+        }
+        
+        .tax-rate-row input[type="number"] {
+            flex-grow: 1;
+        }
+        
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .quantity-control button {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+        
+        .quantity-display {
+            width: 40px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+            }
+            .input-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>KöpGuiden</h1>
+        
+        <h2 class="section-title">
+            <i class="fas fa-balance-scale"></i>
+            単価比較計算機
+        </h2>
+        
+        <div class="manual-accordion">
+            <div class="manual-header" onclick="toggleManual('manual1')">
+                <span>取扱説明書</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div id="manual1" class="manual-content">
+                💡 **使い方**: 商品AとBの価格と内容量を入力して「単価を比較する」ボタンを押すと、どちらがお得か一目でわかります。
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div class="input-group">
+                <label for="price1">商品A 価格 (円)</label>
+                <input type="number" id="price1" placeholder="例: 250">
+            </div>
+            <div class="input-group">
+                <label for="quantity1">内容量 (g/ml)</label>
+                <input type="number" id="quantity1" placeholder="例: 500">
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div class="input-group">
+                <label for="price2">商品B 価格 (円)</label>
+                <input type="number" id="price2" placeholder="例: 300">
+            </div>
+            <div class="input-group">
+                <label for="quantity2">内容量 (g/ml)</label>
+                <input type="number" id="quantity2" placeholder="例: 750">
+            </div>
+        </div>
+
+        <button onclick="compareUnitPrices()">
+            <i class="fas fa-calculator"></i> 単価を比較する
+        </button>
+        <div class="result-box" id="unitPriceResults"></div>
+    </div>
+    
+    <div class="container">
+        <h2 class="section-title">
+            <i class="fas fa-shopping-cart"></i>
+            買い物リスト
+        </h2>
+        
+        <div class="manual-accordion">
+            <div class="manual-header" onclick="toggleManual('manual2')">
+                <span>取扱説明書</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div id="manual2" class="manual-content">
+                💡 **使い方**: 税率と予算を設定し、商品名、数量、税抜価格を入力して「リストに追加」ボタンを押しましょう。合計金額や進捗状況が自動で更新されます。<br>
+                **予算設定は任意**です。入力しない場合は進捗バーは表示されません。
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <div class="tax-rate-row">
+                <label for="taxRate">税率 (%)</label>
+                <input type="number" id="taxRate" value="10">
+            </div>
+
+            <div class="input-group">
+                <label for="budget">予算 (税込)</label>
+                <input type="number" id="budget" placeholder="例: 5000">
+            </div>
+        </div>
+
+        <div class="progress-section">
+            <div class="progress-item">
+                <div class="progress-label">予算進捗</div>
+                <div class="progress-container" id="budgetProgressContainer">
+                    <div class="progress-bar" id="budgetProgressBar"></div>
+                    <div class="progress-text" id="budgetProgressText"></div>
+                </div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-label">買い物進行度</div>
+                <div class="progress-container" id="completionProgressContainer">
+                    <div class="progress-bar" id="completionProgressBar"></div>
+                    <div class="progress-text" id="completionProgressText"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="total-box" id="totalPrice">
+            合計金額: 0円
+        </div>
+
+        <div class="form-section">
+            <div class="input-group">
+                <label for="itemName">商品名</label>
+                <input type="text" id="itemName" placeholder="牛乳">
+            </div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label for="itemPrice">価格 (税抜)</label>
+                    <input type="number" id="itemPrice" placeholder="200">
+                </div>
+                <div class="input-group">
+                    <label for="itemQuantity">数量</label>
+                    <input type="number" id="itemQuantity" value="1">
+                </div>
+            </div>
+            <button onclick="addShoppingItem()">
+                <i class="fas fa-plus-circle"></i> リストに追加
+            </button>
+        </div>
+        
+        <ul id="shopping-list"></ul>
+
+        <button onclick="clearShoppingList()" style="background-color: var(--remove-color); margin-top: 15px;">
+            <i class="fas fa-trash-alt"></i> リストをすべてクリア
+        </button>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'shoppingList';
+        const BUDGET_STORAGE_KEY = 'shoppingBudget';
+        const TAX_RATE_STORAGE_KEY = 'taxRate';
+
+        // Manual Toggle
+        function toggleManual(id) {
+            const content = document.getElementById(id);
+            const header = content.previousElementSibling;
+            header.classList.toggle('active');
+            if (content.style.display === "block") {
+                content.style.display = "none";
+            } else {
+                content.style.display = "block";
+            }
+        }
+        
+        // 単価比較
+        function compareUnitPrices() {
+            const price1 = parseFloat(document.getElementById('price1').value);
+            const quantity1 = parseFloat(document.getElementById('quantity1').value);
+            const price2 = parseFloat(document.getElementById('price2').value);
+            const quantity2 = parseFloat(document.getElementById('quantity2').value);
+            const resultsDiv = document.getElementById('unitPriceResults');
+            
+            if (isNaN(price1) || isNaN(quantity1) || isNaN(price2) || isNaN(quantity2) || quantity1 <= 0 || quantity2 <= 0) {
+                resultsDiv.textContent = '価格と内容量を正しく入力してください。';
+                resultsDiv.classList.remove('win');
+                return;
+            }
+
+            const unitPrice1 = price1 / quantity1;
+            const unitPrice2 = price2 / quantity2;
+            
+            resultsDiv.classList.remove('win');
+
+            if (unitPrice1 < unitPrice2) {
+                resultsDiv.textContent = `商品Aの方がお得です！\n(A: ${unitPrice1.toFixed(2)}円/g, B: ${unitPrice2.toFixed(2)}円/g)`;
+                resultsDiv.classList.add('win');
+            } else if (unitPrice2 < unitPrice1) {
+                resultsDiv.textContent = `商品Bの方がお得です！\n(A: ${unitPrice1.toFixed(2)}円/g, B: ${unitPrice2.toFixed(2)}円/g)`;
+                resultsDiv.classList.add('win');
+            } else {
+                resultsDiv.textContent = `両方とも同じ単価です。\n(A: ${unitPrice1.toFixed(2)}円/g, B: ${unitPrice2.toFixed(2)}円/g)`;
+            }
+        }
+
+        // 買い物リストの読み込み
+        document.addEventListener('DOMContentLoaded', () => {
+            loadShoppingList();
+            document.getElementById('taxRate').addEventListener('input', () => {
+                updateTotalPrice();
+                updateBudgetProgressBar();
+            });
+            document.getElementById('budget').addEventListener('input', updateBudgetProgressBar);
+        });
+
+        function clearShoppingList() {
+            const confirmed = confirm('本当にリストをすべてクリアしますか？この操作は元に戻せません。');
+            if (confirmed) {
+                localStorage.removeItem(STORAGE_KEY);
+                document.getElementById('shopping-list').innerHTML = '';
+                document.getElementById('taxRate').value = 10;
+                document.getElementById('budget').value = '';
+                updateTotalPrice();
+            }
+        }
+
+        function loadShoppingList() {
+            const savedList = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            const savedTaxRate = localStorage.getItem(TAX_RATE_STORAGE_KEY) || 10;
+            const savedBudget = localStorage.getItem(BUDGET_STORAGE_KEY) || 0;
+
+            document.getElementById('taxRate').value = savedTaxRate;
+            document.getElementById('budget').value = savedBudget;
+            
+            const shoppingList = document.getElementById('shopping-list');
+            shoppingList.innerHTML = '';
+            
+            savedList.forEach(item => {
+                addShoppingItemToDOM(item.name, item.price, item.quantity, item.completed);
+            });
+            updateTotalPrice();
+        }
+        
+        function saveShoppingList() {
+            const items = [];
+            document.querySelectorAll('#shopping-list .list-item').forEach(li => {
+                const name = li.querySelector('.item-name').textContent;
+                const price = parseFloat(li.dataset.price);
+                const quantity = parseInt(li.dataset.quantity);
+                const completed = li.classList.contains('completed');
+                items.push({ name, price, quantity, completed });
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+            localStorage.setItem(TAX_RATE_STORAGE_KEY, document.getElementById('taxRate').value);
+            localStorage.setItem(BUDGET_STORAGE_KEY, document.getElementById('budget').value);
+        }
+
+        function addShoppingItem() {
+            const itemNameInput = document.getElementById('itemName');
+            const itemPriceInput = document.getElementById('itemPrice');
+            const itemQuantityInput = document.getElementById('itemQuantity');
+
+            const itemName = itemNameInput.value.trim();
+            const itemPrice = parseFloat(itemPriceInput.value);
+            const itemQuantity = parseInt(itemQuantityInput.value);
+
+            if (itemName === '' || isNaN(itemPrice) || itemPrice < 0 || isNaN(itemQuantity) || itemQuantity < 1) {
+                return;
+            }
+
+            addShoppingItemToDOM(itemName, itemPrice, itemQuantity, false);
+
+            itemNameInput.value = '';
+            itemPriceInput.value = '';
+            itemQuantityInput.value = 1;
+            
+            saveShoppingList();
+            updateTotalPrice();
+        }
+        
+        function addShoppingItemToDOM(itemName, itemPrice, itemQuantity, isCompleted) {
+            const shoppingList = document.getElementById('shopping-list');
+            const li = document.createElement('li');
+            li.className = 'list-item';
+            li.dataset.price = itemPrice;
+            li.dataset.quantity = itemQuantity;
+            if (isCompleted) {
+                li.classList.add('completed');
+            }
+            
+            li.innerHTML = `
+                <div class="item-details">
+                    <span class="item-name">${itemName}</span>
+                    <span class="item-price">${(itemPrice * itemQuantity).toLocaleString()}円 (税抜)</span>
+                </div>
+                <div class="item-actions">
+                    <div class="quantity-control">
+                        <button onclick="changeQuantity(this, -1)">-</button>
+                        <span class="quantity-display">${itemQuantity}</span>
+                        <button onclick="changeQuantity(this, 1)">+</button>
+                    </div>
+                    <button class="complete-button"><i class="fas ${isCompleted ? 'fa-undo' : 'fa-check'}"></i></button>
+                    <button class="remove-button"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            `;
+            
+            const completeButton = li.querySelector('.complete-button');
+            completeButton.onclick = function() {
+                li.classList.toggle('completed');
+                const checkIcon = completeButton.querySelector('i');
+                if (li.classList.contains('completed')) {
+                    checkIcon.classList.replace('fa-check', 'fa-undo');
+                } else {
+                    checkIcon.classList.replace('fa-undo', 'fa-check');
+                }
+                saveShoppingList();
+                updateTotalPrice();
+            };
+
+            li.querySelector('.remove-button').onclick = function() {
+                li.remove();
+                saveShoppingList();
+                updateTotalPrice();
+            };
+            
+            shoppingList.appendChild(li);
+        }
+
+        function changeQuantity(button, delta) {
+            const li = button.closest('.list-item');
+            let quantity = parseInt(li.dataset.quantity);
+            quantity = Math.max(1, quantity + delta);
+            li.dataset.quantity = quantity;
+            li.querySelector('.quantity-display').textContent = quantity;
+            const price = parseFloat(li.dataset.price);
+            li.querySelector('.item-price').textContent = `${(price * quantity).toLocaleString()}円 (税抜)`;
+            saveShoppingList();
+            updateTotalPrice();
+        }
+
+        function updateTotalPrice() {
+            const taxRate = parseFloat(document.getElementById('taxRate').value) / 100;
+            const listItems = document.querySelectorAll('#shopping-list .list-item');
+            let total = 0;
+            listItems.forEach(item => {
+                const price = parseFloat(item.dataset.price);
+                const quantity = parseInt(item.dataset.quantity);
+                if (!isNaN(price) && !isNaN(quantity)) {
+                    total += price * quantity;
+                }
+            });
+            
+            const totalTaxIncluded = Math.round(total * (1 + taxRate));
+            document.getElementById('totalPrice').textContent = `合計金額: ${totalTaxIncluded.toLocaleString()}円 (税込)`;
+            updateBudgetProgressBar();
+            updateCompletionProgressBar();
+        }
+
+        function updateBudgetProgressBar() {
+            const totalTaxIncluded = parseFloat(document.getElementById('totalPrice').textContent.replace(/[^\d.]/g, ''));
+            const budget = parseFloat(document.getElementById('budget').value);
+            const progressBar = document.getElementById('budgetProgressBar');
+            const progressText = document.getElementById('budgetProgressText');
+            const progressContainer = document.getElementById('budgetProgressContainer');
+
+            if (isNaN(budget) || budget <= 0) {
+                progressBar.style.width = '0%';
+                progressText.textContent = '';
+                progressContainer.style.visibility = 'hidden';
+                return;
+            } else {
+                progressContainer.style.visibility = 'visible';
+            }
+            
+            const percentage = Math.min(100, (totalTaxIncluded / budget) * 100);
+            progressBar.style.width = `${percentage}%`;
+
+            if (totalTaxIncluded > budget) {
+                progressContainer.classList.add('budget-over');
+                progressText.textContent = `予算オーバー！ (${(totalTaxIncluded - budget).toLocaleString()}円)`;
+            } else {
+                progressContainer.classList.remove('budget-over');
+                progressText.textContent = `${percentage.toFixed(0)}%`;
+            }
+
+            saveShoppingList();
+        }
+
+        function updateCompletionProgressBar() {
+            const allItems = document.querySelectorAll('#shopping-list .list-item').length;
+            const completedItems = document.querySelectorAll('#shopping-list .list-item.completed').length;
+            const progressBar = document.getElementById('completionProgressBar');
+            const progressText = document.getElementById('completionProgressText');
+            const progressContainer = document.getElementById('completionProgressContainer');
+
+            if (allItems === 0) {
+                progressBar.style.width = '0%';
+                progressText.textContent = '';
+                progressContainer.style.visibility = 'hidden';
+                return;
+            } else {
+                progressContainer.style.visibility = 'visible';
+            }
+
+            const percentage = (completedItems / allItems) * 100;
+            progressBar.style.width = `${percentage}%`;
+            progressText.textContent = `${completedItems} / ${allItems} (${percentage.toFixed(0)}%)`;
+
+            saveShoppingList();
+        }
+
+        // Enterキーでリストに追加
+        document.getElementById('itemQuantity').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addShoppingItem();
+            }
+        });
+    </script>
+</body>
+</html>
